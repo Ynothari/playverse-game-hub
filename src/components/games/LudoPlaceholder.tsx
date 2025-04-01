@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Info, X, AlertCircle } from 'lucide-react';
 
@@ -44,7 +45,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
         { id: 'y2', color: 'yellow', position: null, isHome: true, isComplete: false },
         { id: 'y3', color: 'yellow', position: null, isHome: true, isComplete: false },
         { id: 'y4', color: 'yellow', position: null, isHome: true, isComplete: false },
-      ] : [])
+      ] as Token[] : [])
     ];
     
     setTokens(initialTokens);
@@ -266,7 +267,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
     }
   };
   
-  const getStartPosition = (color: string): number => {
+  const getStartPosition = (color: 'red' | 'blue' | 'green' | 'yellow'): number => {
     switch (color) {
       case 'red': return 0; 
       case 'blue': return 13;
@@ -276,7 +277,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
     }
   };
   
-  const getHomeEntrance = (color: string): number => {
+  const getHomeEntrance = (color: 'red' | 'blue' | 'green' | 'yellow'): number => {
     switch (color) {
       case 'red': return 51;
       case 'blue': return 12;
@@ -286,7 +287,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
     }
   };
   
-  const getHomeRunStart = (color: string): number => {
+  const getHomeRunStart = (color: 'red' | 'blue' | 'green' | 'yellow'): number => {
     switch (color) {
       case 'red': return 100;
       case 'blue': return 200;
