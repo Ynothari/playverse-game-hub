@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Info, X, AlertCircle } from 'lucide-react';
 
@@ -265,7 +264,7 @@ const SnakeAndLadderPlaceholder: React.FC<SnakeAndLadderPlaceholderProps> = ({ g
           <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
             {Object.entries(ladders).map(([foot, top]) => {
               const footPos = getBoardCellPosition(parseInt(foot, 10));
-              const topPos = getBoardCellPosition(parseInt(top, 10));
+              const topPos = getBoardCellPosition(parseInt(top.toString(), 10));
               
               const footX = parseFloat(footPos.left);
               const footY = parseFloat(footPos.top);
