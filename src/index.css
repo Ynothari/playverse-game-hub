@@ -37,11 +37,23 @@
   }
 
   * {
-    @apply border-border;
+    @apply border-border scroll-smooth;
   }
 
   body {
-    @apply bg-game-dark text-foreground;
+    @apply bg-game-dark text-foreground antialiased;
+  }
+  
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 rounded-full hover:bg-gray-500;
   }
 }
 
@@ -65,5 +77,13 @@
 
   .game-layout {
     @apply min-h-[80vh] flex flex-col items-center justify-center p-6;
+  }
+  
+  .glass-card {
+    @apply bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-xl;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-game-teal via-white to-game-teal bg-clip-text text-transparent;
   }
 }

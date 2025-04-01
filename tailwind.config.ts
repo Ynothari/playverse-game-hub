@@ -105,7 +105,16 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'float': 'float 6s ease-in-out infinite',
 				'pulse-glow': 'pulse-glow 3s ease-in-out infinite'
-			}
+			},
+			gridTemplateColumns: {
+				'15': 'repeat(15, minmax(0, 1fr))',
+			},
+			gridTemplateRows: {
+				'15': 'repeat(15, minmax(0, 1fr))',
+			},
+			backgroundImage: {
+				'radial-gradient': 'radial-gradient(circle at center, rgba(0,229,255,0.1) 0%, transparent 70%)',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
