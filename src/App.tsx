@@ -15,29 +15,32 @@ import Profile from "@/pages/Profile";
 import Chatbot from "@/pages/Chatbot";
 import NotFound from "@/pages/NotFound";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/games/chess" element={<Chess />} />
-            <Route path="/games/ludo" element={<Ludo />} />
-            <Route path="/games/snake-and-ladder" element={<SnakeAndLadder />} />
-            <Route path="/games/tic-tac-toe" element={<TicTacToe />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/chatbot" element={<Chatbot />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </MainLayout>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Create QueryClient inside the component
+  const queryClient = new QueryClient();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <MainLayout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/games/chess" element={<Chess />} />
+              <Route path="/games/ludo" element={<Ludo />} />
+              <Route path="/games/snake-and-ladder" element={<SnakeAndLadder />} />
+              <Route path="/games/tic-tac-toe" element={<TicTacToe />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </MainLayout>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
