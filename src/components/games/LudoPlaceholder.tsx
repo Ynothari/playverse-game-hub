@@ -24,6 +24,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
   const [gameMessage, setGameMessage] = useState<string>('Roll the dice to start!');
 
   useEffect(() => {
+    // Initialize tokens with correct typing
     const initialTokens: Token[] = [
       { id: 'r1', color: 'red', position: null, isHome: true, isComplete: false },
       { id: 'r2', color: 'red', position: null, isHome: true, isComplete: false },
@@ -84,7 +85,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
         }
       }, 1000);
     }
-  }, [diceValue, isRolling, currentPlayer]);
+  }, [diceValue, isRolling, currentPlayer, tokens]);
 
   const rollDice = (isAI = false) => {
     if (isRolling) return;
@@ -170,7 +171,12 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
       setGameMessage(`Token released!`);
     }
     
-    setDiceValue(null);
+    if (diceValue === 6) {
+      setDiceValue(null); // Allow rolling again after a 6
+      return;
+    }
+    
+    setTimeout(() => endTurn(), 1000);
   };
   
   const moveToken = (token: Token) => {
@@ -206,13 +212,19 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
       
       if (allComplete) {
         setGameMessage(`${token.color.toUpperCase()} wins the game!`);
-      } else {
-        setDiceValue(null);
+        return;
       }
       
+      // Roll again after completing a token
+      setDiceValue(null);
       return;
     }
     
+    // Check for safe zones (start positions and every 8th position)
+    const safePositions = [0, 8, 13, 21, 26, 34, 39, 47];
+    const isSafePosition = safePositions.includes(newPosition % 52);
+    
+    // Check for own token or safe position
     const ownTokenAtPosition = tokens.find(t => 
       t.position === newPosition && t.color === token.color && t.id !== token.id
     );
@@ -222,8 +234,10 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
       return;
     }
     
+    // Check for opponent token that can be captured (if not on safe position)
     const opponentAtPosition = tokens.find(t => 
-      t.position === newPosition && t.color !== token.color && newPosition < homeRunStart
+      t.position === newPosition && t.color !== token.color && 
+      newPosition < homeRunStart && !isSafePosition
     );
     
     setTokens(prevTokens => 
@@ -232,6 +246,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
           return { ...t, position: newPosition };
         }
         
+        // Send opponent token home if captured
         if (opponentAtPosition && t.id === opponentAtPosition.id) {
           return { ...t, isHome: true, position: null };
         }
@@ -247,7 +262,7 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
     }
     
     if (diceValue === 6) {
-      setDiceValue(null);
+      setDiceValue(null); // Allow rolling again after a 6
     } else {
       setTimeout(() => endTurn(), 1000);
     }
@@ -334,7 +349,12 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
     }
     
     if (token.isComplete) {
-      return { top: '50%', left: '50%' };
+      switch (token.color) {
+        case 'red': return { top: '50%', left: '43%' };
+        case 'blue': return { top: '43%', left: '50%' };
+        case 'green': return { top: '50%', left: '57%' };
+        case 'yellow': return { top: '57%', left: '50%' };
+      }
     }
     
     if (token.position === null) return null;
@@ -354,38 +374,27 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
       }
     }
     
+    // Main board positions (0-51)
     const pos = token.position % 52;
     
-    if (pos >= 0 && pos <= 5) {
-      return { top: '40%', left: `${25 + pos * 5}%` };
+    // Red path (0-12)
+    if (pos >= 0 && pos <= 12) {
+      return { top: '40%', left: `${25 + pos * 2.5}%` };
     }
     
-    if (pos >= 6 && pos <= 11) {
-      return { top: `${40 - (pos - 5) * 5}%`, left: '55%' };
+    // Blue path (13-25)  
+    if (pos >= 13 && pos <= 25) {
+      return { top: `${40 - (pos - 13) * 2.5}%`, left: '55%' };
     }
     
-    if (pos >= 12 && pos <= 18) {
-      return { top: '10%', left: `${55 - (pos - 12) * 5}%` };
+    // Green path (26-38)
+    if (pos >= 26 && pos <= 38) {
+      return { top: '15%', left: `${55 - (pos - 26) * 2.5}%` };
     }
     
-    if (pos >= 19 && pos <= 24) {
-      return { top: `${10 + (pos - 18) * 5}%`, left: '25%' };
-    }
-    
-    if (pos >= 25 && pos <= 31) {
-      return { top: '40%', left: `${25 + (pos - 25) * 5}%` };
-    }
-    
-    if (pos >= 32 && pos <= 37) {
-      return { top: `${40 + (pos - 31) * 5}%`, left: '55%' };
-    }
-    
-    if (pos >= 38 && pos <= 44) {
-      return { top: '70%', left: `${55 - (pos - 38) * 5}%` };
-    }
-    
-    if (pos >= 45 && pos <= 51) {
-      return { top: `${70 - (pos - 44) * 5}%`, left: '25%' };
+    // Yellow path (39-51)
+    if (pos >= 39 && pos <= 51) {
+      return { top: `${15 + (pos - 39) * 2.5}%`, left: '25%' };
     }
     
     return { top: '0%', left: '0%' };
@@ -419,109 +428,148 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
               <li>Capture opponent tokens by landing on their space</li>
               <li>Roll again after getting a 6 or completing a token</li>
               <li>Get all your tokens to your home run to win</li>
+              <li>Safe zones protect your tokens from capture</li>
             </ul>
           </div>
         </div>
 
         <div className="relative w-full aspect-square bg-gray-900 rounded-xl border border-gray-700 p-4 shadow-inner shadow-black/50 overflow-hidden">
+          {/* Board grid with improved design */}
           <div className="absolute inset-0 grid grid-cols-15 grid-rows-15 gap-0">
-            <div className="col-span-6 row-span-6 bg-red-700/70 rounded-tl-lg"></div>
+            {/* Red home (top-left) */}
+            <div className="col-span-6 row-span-6 bg-red-700/90 rounded-tl-lg border border-red-600/50"></div>
             
+            {/* Center top path */}
             <div className="col-span-3 row-span-6 grid grid-rows-6 grid-cols-3">
               {Array(18).fill(0).map((_, i) => {
                 const row = Math.floor(i / 3);
                 const col = i % 3;
                 const isRedSafety = row === 1 && col === 1;
-                const isBlueSafety = row === 0 && col === 1;
+                const isBlueSafety = row === 4 && col === 1;
+                const isRedPath = row === 2 || row === 3 || row === 4;
+                const isBluePath = row === 0 || row === 1 || row === 2;
                 
                 return (
                   <div 
                     key={`top-${i}`} 
                     className={`
                       border border-gray-700 flex justify-center items-center
-                      ${isRedSafety ? 'bg-red-500/30' : ''}
-                      ${isBlueSafety ? 'bg-blue-500/30' : ''}
-                      ${(!isRedSafety && !isBlueSafety) ? 'bg-gray-800' : ''}
+                      ${isRedSafety ? 'bg-red-500/50' : ''}
+                      ${isBlueSafety ? 'bg-blue-500/50' : ''}
+                      ${isRedPath && col === 1 ? 'bg-red-500/30' : ''}
+                      ${isBluePath && col === 1 ? 'bg-blue-500/30' : ''}
+                      ${(!isRedSafety && !isBlueSafety && !isRedPath && !isBluePath) ? 'bg-gray-800' : ''}
+                      ${(!isRedSafety && !isBlueSafety && (isRedPath || isBluePath) && col !== 1) ? 'bg-gray-800' : ''}
                     `}
                   ></div>
                 );
               })}
             </div>
             
-            <div className="col-span-6 row-span-6 bg-blue-700/70 rounded-tr-lg"></div>
+            {/* Blue home (top-right) */}
+            <div className="col-span-6 row-span-6 bg-blue-700/90 rounded-tr-lg border border-blue-600/50"></div>
             
+            {/* Left side path */}
             <div className="col-span-6 row-span-3 grid grid-cols-6 grid-rows-3">
               {Array(18).fill(0).map((_, i) => {
                 const row = Math.floor(i / 6);
                 const col = i % 6;
                 const isGreenSafety = row === 1 && col === 4;
+                const isYellowSafety = row === 1 && col === 1;
+                const isYellowPath = col === 0 || col === 1 || col === 2;
+                const isGreenPath = col === 3 || col === 4 || col === 5;
                 
                 return (
                   <div 
                     key={`left-${i}`} 
                     className={`
                       border border-gray-700 flex justify-center items-center
-                      ${isGreenSafety ? 'bg-green-500/30' : 'bg-gray-800'}
+                      ${isGreenSafety ? 'bg-green-500/50' : ''}
+                      ${isYellowSafety ? 'bg-yellow-500/50' : ''}
+                      ${isYellowPath && row === 1 ? 'bg-yellow-500/30' : ''}
+                      ${isGreenPath && row === 1 ? 'bg-green-500/30' : ''}
+                      ${(!isGreenSafety && !isYellowSafety && !isYellowPath && !isGreenPath) ? 'bg-gray-800' : ''}
+                      ${(!isGreenSafety && !isYellowSafety && (isYellowPath || isGreenPath) && row !== 1) ? 'bg-gray-800' : ''}
                     `}
                   ></div>
                 );
               })}
             </div>
             
+            {/* Center grid */}
             <div className="col-span-3 row-span-3 grid grid-cols-3 grid-rows-3">
+              {/* Home runs for each color */}
               <div className="grid grid-rows-3 bg-red-700/40"></div>
               <div className="grid grid-cols-3 bg-blue-700/40"></div>
+              <div className="grid grid-rows-3 bg-green-700/40"></div>
+              <div className="grid grid-cols-3 bg-yellow-500/40"></div>
               <div className="bg-gray-700/50 border border-gray-600">
                 <div className="w-full h-full bg-gradient-to-br from-red-600/50 via-blue-600/50 via-green-600/50 to-yellow-500/50"></div>
               </div>
-              <div className="grid grid-cols-3 bg-yellow-500/40"></div>
-              <div className="grid grid-rows-3 bg-green-700/40"></div>
             </div>
             
+            {/* Right side path */}
             <div className="col-span-6 row-span-3 grid grid-cols-6 grid-rows-3">
               {Array(18).fill(0).map((_, i) => {
                 const row = Math.floor(i / 6);
                 const col = i % 6;
                 const isYellowSafety = row === 1 && col === 1;
+                const isGreenSafety = row === 1 && col === 4;
+                const isGreenPath = col === 0 || col === 1 || col === 2;
+                const isYellowPath = col === 3 || col === 4 || col === 5;
                 
                 return (
                   <div 
                     key={`right-${i}`} 
                     className={`
                       border border-gray-700 flex justify-center items-center
-                      ${isYellowSafety ? 'bg-yellow-500/30' : 'bg-gray-800'}
+                      ${isYellowSafety ? 'bg-yellow-500/50' : ''}
+                      ${isGreenSafety ? 'bg-green-500/50' : ''}
+                      ${isYellowPath && row === 1 ? 'bg-yellow-500/30' : ''}
+                      ${isGreenPath && row === 1 ? 'bg-green-500/30' : ''}
+                      ${(!isYellowSafety && !isGreenSafety && !isYellowPath && !isGreenPath) ? 'bg-gray-800' : ''}
+                      ${(!isYellowSafety && !isGreenSafety && (isYellowPath || isGreenPath) && row !== 1) ? 'bg-gray-800' : ''}
                     `}
                   ></div>
                 );
               })}
             </div>
             
-            <div className="col-span-6 row-span-6 bg-green-700/70 rounded-bl-lg"></div>
+            {/* Green home (bottom-left) */}
+            <div className="col-span-6 row-span-6 bg-green-700/90 rounded-bl-lg border border-green-600/50"></div>
             
+            {/* Center bottom path */}
             <div className="col-span-3 row-span-6 grid grid-rows-6 grid-cols-3">
               {Array(18).fill(0).map((_, i) => {
                 const row = Math.floor(i / 3);
                 const col = i % 3;
-                const isYellowSafety = row === 4 && col === 1;
-                const isGreenSafety = row === 5 && col === 1;
+                const isYellowSafety = row === 1 && col === 1;
+                const isGreenSafety = row === 4 && col === 1;
+                const isYellowPath = row === 0 || row === 1 || row === 2;
+                const isGreenPath = row === 3 || row === 4 || row === 5;
                 
                 return (
                   <div 
                     key={`bottom-${i}`} 
                     className={`
                       border border-gray-700 flex justify-center items-center
-                      ${isYellowSafety ? 'bg-yellow-500/30' : ''}
-                      ${isGreenSafety ? 'bg-green-500/30' : ''}
-                      ${(!isYellowSafety && !isGreenSafety) ? 'bg-gray-800' : ''}
+                      ${isYellowSafety ? 'bg-yellow-500/50' : ''}
+                      ${isGreenSafety ? 'bg-green-500/50' : ''}
+                      ${isYellowPath && col === 1 ? 'bg-yellow-500/30' : ''}
+                      ${isGreenPath && col === 1 ? 'bg-green-500/30' : ''}
+                      ${(!isYellowSafety && !isGreenSafety && !isYellowPath && !isGreenPath) ? 'bg-gray-800' : ''}
+                      ${(!isYellowSafety && !isGreenSafety && (isYellowPath || isGreenPath) && col !== 1) ? 'bg-gray-800' : ''}
                     `}
                   ></div>
                 );
               })}
             </div>
             
-            <div className="col-span-6 row-span-6 bg-yellow-500/70 rounded-br-lg"></div>
+            {/* Yellow home (bottom-right) */}
+            <div className="col-span-6 row-span-6 bg-yellow-500/90 rounded-br-lg border border-yellow-400/50"></div>
           </div>
           
+          {/* Home positions for tokens */}
           <div className="absolute top-[8%] left-[8%] w-[30%] h-[30%] bg-red-900/20 rounded-lg border border-red-700/30 grid grid-cols-2 grid-rows-2 gap-4 p-4">
             <div className="bg-red-100 rounded-full shadow-lg"></div>
             <div className="bg-red-100 rounded-full shadow-lg"></div>
@@ -550,15 +598,18 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
             <div className="bg-yellow-100 rounded-full shadow-lg"></div>
           </div>
           
+          {/* Home run paths */}
           <div className="absolute top-[43%] left-[40%] w-[20%] h-[3%] bg-red-500/40"></div>
           <div className="absolute top-[40%] left-[57%] w-[3%] h-[20%] bg-blue-500/40"></div>
           <div className="absolute top-[57%] left-[40%] w-[20%] h-[3%] bg-green-500/40"></div>
           <div className="absolute top-[40%] left-[40%] w-[3%] h-[20%] bg-yellow-500/40"></div>
           
+          {/* Center finish */}
           <div className="absolute top-[43%] left-[43%] w-[14%] h-[14%] bg-gray-800 rounded-lg border border-white/10 shadow-inner">
             <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-blue-600/20 via-green-600/20 to-yellow-600/20 rounded-md"></div>
           </div>
           
+          {/* Player tokens */}
           {tokens.map(token => {
             const position = getTokenPosition(token);
             
@@ -588,6 +639,12 @@ const LudoPlaceholder: React.FC<LudoPlaceholderProps> = ({ gameMode }) => {
               ></div>
             );
           })}
+          
+          {/* Safe zone indicators */}
+          <div className="absolute top-[15%] left-[55%] w-3 h-3 rounded-full bg-yellow-300/50 shadow-md transform -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
+          <div className="absolute top-[85%] left-[45%] w-3 h-3 rounded-full bg-yellow-300/50 shadow-md transform -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
+          <div className="absolute top-[45%] left-[15%] w-3 h-3 rounded-full bg-yellow-300/50 shadow-md transform -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
+          <div className="absolute top-[55%] left-[85%] w-3 h-3 rounded-full bg-yellow-300/50 shadow-md transform -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
         </div>
       
         <div className="mt-6 flex flex-wrap gap-4 justify-center items-center">

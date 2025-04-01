@@ -19,10 +19,12 @@ const SnakeAndLadderPlaceholder: React.FC<SnakeAndLadderPlaceholderProps> = ({ g
   });
   const [gameMessage, setGameMessage] = useState<string>('Roll the dice to start!');
   
-  // Define snakes and ladders
+  // Balanced snakes and ladders
   const snakes = {
-    17: 7,
-    54: 34,
+    16: 6,
+    47: 26,
+    49: 11,
+    56: 53,
     62: 19,
     64: 60,
     87: 24,
@@ -190,7 +192,7 @@ const SnakeAndLadderPlaceholder: React.FC<SnakeAndLadderPlaceholderProps> = ({ g
           </div>
         </div>
 
-        <div className="relative w-full aspect-square bg-gradient-to-br from-amber-700/30 to-green-900/30 rounded-xl border border-amber-700/30 p-4 shadow-inner shadow-black/50 overflow-hidden">
+        <div className="relative w-full aspect-square bg-gradient-to-br from-emerald-800/40 to-green-900/40 rounded-xl border border-emerald-700/30 p-4 shadow-inner shadow-black/50 overflow-hidden">
           {/* Board grid */}
           <div className="absolute inset-0 grid grid-cols-10 grid-rows-10 gap-0">
             {Array.from({ length: 100 }).map((_, i) => {
@@ -208,13 +210,13 @@ const SnakeAndLadderPlaceholder: React.FC<SnakeAndLadderPlaceholderProps> = ({ g
                 <div 
                   key={`cell-${cellNum}`} 
                   className={`
-                    border border-amber-800/30 flex justify-center items-center
-                    ${(row + col) % 2 === 0 ? 'bg-amber-700/10' : 'bg-green-900/10'}
-                    ${isSnakeHead ? 'bg-red-900/20' : ''}
-                    ${isLadderFoot ? 'bg-blue-600/20' : ''}
+                    border border-emerald-800/30 flex justify-center items-center
+                    ${(row + col) % 2 === 0 ? 'bg-emerald-700/20' : 'bg-green-900/20'}
+                    ${isSnakeHead ? 'bg-red-900/30 border-red-500/30' : ''}
+                    ${isLadderFoot ? 'bg-amber-600/30 border-amber-500/30' : ''}
                   `}
                 >
-                  <span className="text-xs sm:text-sm font-bold opacity-60">{actualNumber}</span>
+                  <span className="text-xs sm:text-sm font-bold opacity-80 text-white">{actualNumber}</span>
                 </div>
               );
             })}
@@ -226,16 +228,35 @@ const SnakeAndLadderPlaceholder: React.FC<SnakeAndLadderPlaceholderProps> = ({ g
               const headPos = getBoardCellPosition(parseInt(head, 10));
               const tailPos = getBoardCellPosition(tail);
               
+              // Calculate control points for more natural curves
+              const headX = parseFloat(headPos.left);
+              const headY = parseFloat(headPos.top);
+              const tailX = parseFloat(tailPos.left);
+              const tailY = parseFloat(tailPos.top);
+              
+              // Determine curve control points
+              const controlX = (headX + tailX) / 2 + (Math.random() * 10 - 5);
+              const controlY = (headY + tailY) / 2 + (Math.random() * 10 - 5);
+              
               return (
-                <path 
-                  key={`snake-${head}`}
-                  d={`M ${parseFloat(headPos.left)} ${parseFloat(headPos.top)} Q ${(parseFloat(headPos.left) + parseFloat(tailPos.left)) / 2 + (Math.random() * 10 - 5)} ${(parseFloat(headPos.top) + parseFloat(tailPos.top)) / 2 + (Math.random() * 10 - 5)}, ${parseFloat(tailPos.left)} ${parseFloat(tailPos.top)}`}
-                  stroke="red"
-                  strokeWidth="1"
-                  fill="none"
-                  strokeDasharray="2,2"
-                  opacity="0.7"
-                />
+                <g key={`snake-${head}`}>
+                  {/* Snake body */}
+                  <path 
+                    d={`M ${headX} ${headY} Q ${controlX} ${controlY}, ${tailX} ${tailY}`}
+                    stroke="crimson"
+                    strokeWidth="1.5"
+                    fill="none"
+                    strokeDasharray="0"
+                    opacity="0.8"
+                  />
+                  {/* Snake head */}
+                  <circle 
+                    cx={headX} 
+                    cy={headY} 
+                    r="1.5" 
+                    fill="red" 
+                  />
+                </g>
               );
             })}
           </svg>
@@ -244,28 +265,68 @@ const SnakeAndLadderPlaceholder: React.FC<SnakeAndLadderPlaceholderProps> = ({ g
           <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
             {Object.entries(ladders).map(([foot, top]) => {
               const footPos = getBoardCellPosition(parseInt(foot, 10));
-              const topPos = getBoardCellPosition(top);
+              const topPos = getBoardCellPosition(parseInt(top, 10));
+              
+              const footX = parseFloat(footPos.left);
+              const footY = parseFloat(footPos.top);
+              const topX = parseFloat(topPos.left);
+              const topY = parseFloat(topPos.top);
+              
+              // Create ladder rails with rungs
+              const angle = Math.atan2(topY - footY, topX - footX);
+              const length = Math.sqrt(Math.pow(topX - footX, 2) + Math.pow(topY - footY, 2));
+              const rungCount = Math.ceil(length / 5);
+              
+              // Offset for the two rails
+              const railOffset = 0.8;
+              const xOffset = railOffset * Math.cos(angle + Math.PI/2);
+              const yOffset = railOffset * Math.sin(angle + Math.PI/2);
               
               return (
                 <g key={`ladder-${foot}`}>
+                  {/* Left rail */}
                   <line 
-                    x1={parseFloat(footPos.left)}
-                    y1={parseFloat(footPos.top)}
-                    x2={parseFloat(topPos.left)}
-                    y2={parseFloat(topPos.top)}
+                    x1={footX - xOffset}
+                    y1={footY - yOffset}
+                    x2={topX - xOffset}
+                    y2={topY - yOffset}
                     stroke="gold"
-                    strokeWidth="2"
-                    opacity="0.7"
+                    strokeWidth="0.8"
+                    opacity="0.9"
                   />
+                  
+                  {/* Right rail */}
                   <line 
-                    x1={parseFloat(footPos.left) + 2}
-                    y1={parseFloat(footPos.top)}
-                    x2={parseFloat(topPos.left) + 2}
-                    y2={parseFloat(topPos.top)}
+                    x1={footX + xOffset}
+                    y1={footY + yOffset}
+                    x2={topX + xOffset}
+                    y2={topY + yOffset}
                     stroke="gold"
-                    strokeWidth="2"
-                    opacity="0.7"
+                    strokeWidth="0.8"
+                    opacity="0.9"
                   />
+                  
+                  {/* Rungs */}
+                  {Array.from({ length: rungCount }).map((_, i) => {
+                    const t = i / (rungCount - 1);
+                    const x1 = footX - xOffset + (topX - footX - xOffset) * t;
+                    const y1 = footY - yOffset + (topY - footY - yOffset) * t;
+                    const x2 = footX + xOffset + (topX - footX + xOffset) * t;
+                    const y2 = footY + yOffset + (topY - footY + yOffset) * t;
+                    
+                    return (
+                      <line
+                        key={`rung-${foot}-${i}`}
+                        x1={x1}
+                        y1={y1}
+                        x2={x2}
+                        y2={y2}
+                        stroke="gold"
+                        strokeWidth="0.6"
+                        opacity="0.8"
+                      />
+                    );
+                  })}
                 </g>
               );
             })}
